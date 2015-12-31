@@ -279,17 +279,17 @@
 
 # define OSC_FREQ                       8
 
-# define BOARD_PIN_LED_ACTIVITY         GPIO7
-# define BOARD_PIN_LED_BOOTLOADER       GPIO8
+# define BOARD_PIN_LED_ACTIVITY         GPIO8
+# define BOARD_PIN_LED_BOOTLOADER       GPIO9
 # define BOARD_PORT_LEDS                GPIOC
 # define BOARD_CLOCK_LEDS_REGISTER      RCC_APB2ENR
-# define BOARD_CLOCK_LEDS               RCC_APB2ENR_IOPBEN
+# define BOARD_CLOCK_LEDS               RCC_APB2ENR_IOPCEN
 # define BOARD_LED_ON                   gpio_clear
 # define BOARD_LED_OFF                  gpio_set
 
 # define BOARD_USART                    USART1
-# define BOARD_USART_CLOCK_REGISTER     RCC_APB1ENR
-# define BOARD_USART_CLOCK_BIT          RCC_APB1ENR_USART1EN
+# define BOARD_USART_CLOCK_REGISTER     RCC_APB2ENR
+# define BOARD_USART_CLOCK_BIT          RCC_APB2ENR_USART1EN
 
 # define BOARD_PORT_USART               GPIOA
 # define BOARD_PIN_TX                   GPIO_USART1_TX
@@ -300,7 +300,7 @@
 # define BOARD_FORCE_BL_PIN             GPIO0
 # define BOARD_FORCE_BL_PORT            GPIOA
 # define BOARD_FORCE_BL_CLOCK_REGISTER  RCC_APB2ENR
-# define BOARD_FORCE_BL_CLOCK_BIT       RCC_APB2ENR_IOPBEN
+# define BOARD_FORCE_BL_CLOCK_BIT       RCC_APB2ENR_IOPAEN
 # define BOARD_FORCE_BL_PULL            GPIO_CNF_INPUT_PULL_UPDOWN // depend on external pull
 # define BOARD_FORCE_BL_VALUE           BOARD_FORCE_BL_PIN
 
