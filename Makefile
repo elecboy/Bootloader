@@ -35,7 +35,7 @@ export COMMON_SRCS	 = bl.c cdcacm.c  usart.c
 #
 # Bootloaders to build
 #
-TARGETS			 = px4fmu_bl px4fmuv2_bl px4fmuv4_bl px4flow_bl px4discovery_bl px4aerocore_bl px4io_bl px4mavstation_bl
+TARGETS			 = px4fmu_bl px4fmuv2_bl px4fmuv4_bl px4flow_bl px4discovery_bl px4aerocore_bl px4io_bl px4mavstation_bl candetect_bl
 
 # px4io_bl px4flow_bl
 
@@ -68,11 +68,14 @@ px4aerocore_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f4 TARGET_HW=PX4_AEROCORE_V1 LINKER_FILE=stm32f4.ld TARGET_FILE_NAME=$@
 
 # Default bootloader delay is *very* short, just long enough to catch
-# the board for recovery but not so long as to make restarting after a 
+# the board for recovery but not so long as to make restarting after a
 # brownout problematic.
 #
 px4io_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f1 TARGET_HW=PX4_PIO_V1 LINKER_FILE=stm32f1.ld TARGET_FILE_NAME=$@
+
+candetect_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
+		make -f Makefile.f1 TARGET_HW=CAN_DETECT_V1 LINKER_FILE=16k-stm32f1.ld TARGET_FILE_NAME=$@
 
 px4mavstation_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f1 TARGET_HW=PX4_MAVSTATION_V1 LINKER_FILE=12K-stm32f1.ld TARGET_FILE_NAME=$@
