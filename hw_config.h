@@ -628,6 +628,49 @@
 # define FLASH_SECTOR_SIZE              0x400
 
 /****************************************************************************
+ * TARGET_HW_CAMERA_DOCK_V2
+ ****************************************************************************/
+#elif  defined(TARGET_HW_CAMERA_DOCK_V2)
+
+# define APP_LOAD_ADDRESS               0x08002000
+# define APP_SIZE_MAX                   0xe000
+# define BOOTLOADER_DELAY               2000
+# define BOARD_CAMERA_DOCK_V2
+# define INTERFACE_USB                	0
+# define INTERFACE_USART                1
+# define USBDEVICESTRING                "Camera Dock V1"
+# define USBPRODUCTID                   0x0001
+
+# define OSC_FREQ                       8
+
+# define BOARD_PIN_LED_ACTIVITY         GPIO13
+# define BOARD_PIN_LED_BOOTLOADER       GPIO13
+# define BOARD_PORT_LEDS                GPIOC
+# define BOARD_CLOCK_LEDS               RCC_GPIOC
+# define BOARD_LED_ON                   gpio_clear
+# define BOARD_LED_OFF                  gpio_set
+
+# define BOARD_USART                    USART1
+# define BOARD_USART_CLOCK              RCC_USART1
+//# define USART_STOPBITS_1               USART_CR2_STOPBITS_1
+# define USART_SR_RXNE                  USART_ISR_RXNE
+
+# define BOARD_PORT_USART               GPIOA
+# define BOARD_PIN_TX                   GPIO9
+# define BOARD_PIN_RX                   GPIO8
+# define BOARD_USART_PIN_CLOCK          RCC_GPIOA
+
+# define BOARD_FORCE_BL_PIN             GPIO0
+# define BOARD_FORCE_BL_PORT            GPIOA
+# define BOARD_FORCE_BL_CLOCK           RCC_GPIOA
+# define BOARD_FORCE_BL_PULL            GPIO_PUPD_NONE
+# define BOARD_FORCE_BL_VALUE           BOARD_FORCE_BL_PIN
+
+# define BOARD_FLASH_SECTORS            64
+# define BOARD_TYPE                     100
+# define FLASH_SECTOR_SIZE              0x400
+
+/****************************************************************************
  * TARGET_HW_PX4_AEROCORE_V1
  ****************************************************************************/
 
