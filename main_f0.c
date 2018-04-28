@@ -203,7 +203,7 @@ uint32_t get_mcu_id(void)
 
 int get_mcu_desc(int max, uint8_t *revstr)
 {
-	const char none[] = "STM32F0xxx,?";
+	const char none[] = "STM32F051C8T6,1";
 	int i;
 
 	for (i = 0; none[i] && i < max - 1; i++) {
