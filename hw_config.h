@@ -638,7 +638,7 @@
 # define BOARD_CAMERA_DOCK_V2
 # define INTERFACE_USB                	0
 # define INTERFACE_USART                1
-# define USBDEVICESTRING                "Camera Dock V1"
+# define USBDEVICESTRING                "Camera Dock V2"
 # define USBPRODUCTID                   0x0001
 
 # define OSC_FREQ                       8
@@ -667,7 +667,7 @@
 # define BOARD_FORCE_BL_VALUE           BOARD_FORCE_BL_PIN
 
 # define BOARD_FLASH_SECTORS            64
-# define BOARD_TYPE                     100
+# define BOARD_TYPE                     102
 # define FLASH_SECTOR_SIZE              0x400
 
 /****************************************************************************
