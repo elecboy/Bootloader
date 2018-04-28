@@ -2,7 +2,7 @@
 # PX4 bootloader build rules for STM32F1 targets.
 #
 
-OPENOCD		?= ../../sat/bin/openocd
+OPENOCD		?= openocd
 
 JTAGCONFIG ?= interface/olimex-jtag-tiny.cfg
 #JTAGCONFIG ?= interface/jtagkey-tiny.cfg
@@ -29,4 +29,4 @@ include rules.mk
 upload: all flash-bootloader
 
 flash-bootloader:
-	$(OPENOCD) --search ../px4_bootloader -f $(JTAGCONFIG) -f stm32f0x.cfg -c init -c "reset halt" -c "flash write_image erase $(BINARY)" -c "reset run" -c shutdown
+	$(OPENOCD) -f interface/cmsis-dap.cfg -f target/stm32f0x.cfg -c init -c "reset halt" -c "program $(ELF) reset exit verify" -c shutdown
