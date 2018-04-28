@@ -40,6 +40,7 @@ TARGETS	= \
 	aerofcv1_bl \
 	auavx2v1_bl \
 	crazyflie_bl \
+	candetect_bl \
 	mindpxv2_bl \
 	omnibusf4sd_bl \
 	px4aerocore_bl \
@@ -58,6 +59,11 @@ TARGETS	= \
 	cube_f7_bl
 
 all:	$(TARGETS) sizes
+
+# px4io_bl px4flow_bl
+
+all:	$(TARGETS)
+
 
 clean:
 	cd libopencm3 && make --no-print-directory clean && cd ..
@@ -135,6 +141,11 @@ aerofcv1_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 .PHONY: sizes
 sizes:
 	@-find build/*/ -name '*.elf' -type f | xargs size 2> /dev/null || :
+candetect_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
+		make -f Makefile.f1 TARGET_HW=CAN_DETECT_V1 LINKER_FILE=16K-stm32f1.ld TARGET_FILE_NAME=$@
+
+px4mavstation_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
+	make -f Makefile.f1 TARGET_HW=PX4_MAVSTATION_V1 LINKER_FILE=12K-stm32f1.ld TARGET_FILE_NAME=$@
 
 #
 # Binary management

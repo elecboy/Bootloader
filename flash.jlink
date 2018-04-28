@@ -1,0 +1,5 @@
+r
+loadbin candetect_bl.bin 0x08000000
+r
+g
+q
