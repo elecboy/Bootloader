@@ -64,7 +64,9 @@ board_init(void)
 #ifdef INTERFACE_USART
 	/* configure usart pins */
 	rcc_periph_clock_enable(BOARD_USART_PIN_CLOCK);
-	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, BOARD_PIN_TX);
+	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_AF, GPIO_PUPD_NONE, BOARD_PIN_TX | BOARD_PIN_RX);
+	/* Setup USART1 TX pin as alternate function. */
+	gpio_set_af(BOARD_PORT_USART, GPIO_AF1, BOARD_PIN_TX | BOARD_PIN_RX);
 
 	/* configure USART clock */
 	rcc_periph_clock_enable(BOARD_USART_CLOCK);
@@ -94,7 +96,7 @@ board_deinit(void)
 #ifdef INTERFACE_USART
 	/* configure usart pins */
 	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_INPUT,
-		      GPIO_MODE_INPUT, BOARD_PIN_TX);
+		      GPIO_PUPD_NONE, BOARD_PIN_TX | BOARD_PIN_RX);
 
 	/* disable USART peripheral clock */
 	rcc_periph_clock_disable(BOARD_USART_CLOCK);
