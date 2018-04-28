@@ -97,7 +97,6 @@ board_deinit(void)
 		      GPIO_MODE_INPUT, BOARD_PIN_TX);
 
 	/* disable USART peripheral clock */
-//	rcc_peripheral_disable_clock(&BOARD_USART_CLOCK_REGISTER, BOARD_USART_CLOCK_BIT);
 	rcc_periph_clock_disable(BOARD_USART_CLOCK);
 #endif
 #ifdef INTERFACE_I2C
@@ -105,7 +104,7 @@ board_deinit(void)
 #endif
 
 	/* reset the APB2 peripheral clocks */
-	RCC_APB2ENR = 0x00000000; // XXX Magic reset number from STM32F1x reference manual
+	RCC_APB2ENR = 0x00000000; // XXX Magic reset number from STM32F0x reference manual
 }
 
 /**
@@ -119,7 +118,7 @@ clock_init(void)
 #if defined(INTERFACE_USB)
 	rcc_clock_setup_in_hsi_out_48mhz();
 #else
-	rcc_clock_setup_in_hsi_out_24mhz();
+	rcc_clock_setup_in_hse_out_48mhz();
 #endif
 }
 
@@ -202,7 +201,7 @@ uint32_t get_mcu_id(void)
 
 int get_mcu_desc(int max, uint8_t *revstr)
 {
-	const char none[] = "STM32F1xxx,?";
+	const char none[] = "STM32F0xxx,?";
 	int i;
 
 	for (i = 0; none[i] && i < max - 1; i++) {
