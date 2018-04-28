@@ -641,7 +641,7 @@
 # define USBDEVICESTRING                "Camera Dock V2"
 # define USBPRODUCTID                   0x0001
 
-# define OSC_FREQ                       8
+# define OSC_FREQ                       48
 
 # define BOARD_PIN_LED_ACTIVITY         GPIO13
 # define BOARD_PIN_LED_BOOTLOADER       GPIO13
