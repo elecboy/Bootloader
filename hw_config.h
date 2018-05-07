@@ -660,11 +660,11 @@
 # define BOARD_PIN_RX                   GPIO10
 # define BOARD_USART_PIN_CLOCK          RCC_GPIOA
 
-# define BOARD_FORCE_BL_PIN             GPIO0
-# define BOARD_FORCE_BL_PORT            GPIOA
-# define BOARD_FORCE_BL_CLOCK           RCC_GPIOA
-# define BOARD_FORCE_BL_PULL            GPIO_PUPD_NONE
-# define BOARD_FORCE_BL_VALUE           BOARD_FORCE_BL_PIN
+//# define BOARD_FORCE_BL_PIN             GPIO0
+//# define BOARD_FORCE_BL_PORT            GPIOA
+//# define BOARD_FORCE_BL_CLOCK           RCC_GPIOA
+//# define BOARD_FORCE_BL_PULL            GPIO_PUPD_NONE
+//# define BOARD_FORCE_BL_VALUE           BOARD_FORCE_BL_PIN
 
 # define BOARD_FLASH_SECTORS            56
 # define BOARD_TYPE                     102
