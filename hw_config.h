@@ -643,12 +643,12 @@
 
 # define OSC_FREQ                       48
 
-# define BOARD_PIN_LED_ACTIVITY         GPIO13
-# define BOARD_PIN_LED_BOOTLOADER       GPIO13
-# define BOARD_PORT_LEDS                GPIOC
-# define BOARD_CLOCK_LEDS               RCC_GPIOC
-# define BOARD_LED_ON                   gpio_clear
-# define BOARD_LED_OFF                  gpio_set
+# define BOARD_PIN_LED_ACTIVITY         GPIO3
+# define BOARD_PIN_LED_BOOTLOADER       GPIO4
+# define BOARD_PORT_LEDS                GPIOB
+# define BOARD_CLOCK_LEDS               RCC_GPIOB
+# define BOARD_LED_ON                   gpio_set
+# define BOARD_LED_OFF                  gpio_clear
 
 # define BOARD_USART                    USART1
 # define BOARD_USART_CLOCK              RCC_USART1
