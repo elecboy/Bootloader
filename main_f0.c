@@ -273,15 +273,16 @@ static bool
 should_wait(void)
 {
 	bool result = false;
-
-	PWR_CR |= PWR_CR_DBP;
+	rcc_periph_clock_enable(RCC_PWR);
+	pwr_disable_backup_domain_write_protect();
 
 	if (RTC_BKPXR(1) == BL_WAIT_MAGIC) {
 		result = true;
         RTC_BKPXR(1) = 0;
 	}
 
-	PWR_CR &= ~PWR_CR_DBP;
+    pwr_enable_backup_domain_write_protect();
+    rcc_periph_clock_disable(RCC_PWR);
 
 	return result;
 }
