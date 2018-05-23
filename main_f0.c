@@ -10,6 +10,7 @@
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/pwr.h>
+#include <libopencm3/stm32/rtc.h>
 #include <libopencm3/cm3/systick.h>
 
 #include "bl.h"
@@ -273,14 +274,14 @@ should_wait(void)
 {
 	bool result = false;
 
-//	PWR_CR |= PWR_CR_DBP;
-//
-//	if (BKP_DR1 == BL_WAIT_MAGIC) {
-//		result = true;
-//		BKP_DR1 = 0;
-//	}
-//
-//	PWR_CR &= ~PWR_CR_DBP;
+	PWR_CR |= PWR_CR_DBP;
+
+	if (RTC_BKPXR(1) == BL_WAIT_MAGIC) {
+		result = true;
+        RTC_BKPXR(1) = 0;
+	}
+
+	PWR_CR &= ~PWR_CR_DBP;
 
 	return result;
 }
@@ -295,7 +296,8 @@ main(void)
 
 #if defined(INTERFACE_USART) || defined (INTERFACE_USB)
 	/* XXX sniff for a USART connection to decide whether to wait in the bootloader? */
-	timeout = BOOTLOADER_DELAY;
+	//timeout = BOOTLOADER_DELAY;
+    timeout = 0;
 #endif
 
 #ifdef INTERFACE_I2C
@@ -322,12 +324,13 @@ main(void)
 	/* if we aren't expected to wait in the bootloader, try to boot immediately */
 	if (timeout == 0) {
 		/* try to boot immediately */
+        clock_init();
+        cinit(BOARD_INTERFACE_CONFIG, USART);
 		jump_to_app();
 
 		/* if we returned, there is no app; go to the bootloader and stay there */
 		timeout = 0;
 	}
-
 	/* configure the clock for bootloader activity */
 	clock_init();
 
