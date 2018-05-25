@@ -280,9 +280,8 @@ should_wait(void)
 
 	if (RTC_BKPXR(1) == BL_WAIT_MAGIC) {
 		result = true;
-        RTC_BKPXR(1) = BL_VERSION_CODE;
 	}
-
+	RTC_BKPXR(1) = BL_VERSION_CODE;
     pwr_enable_backup_domain_write_protect();
     rcc_periph_clock_disable(RCC_PWR);
 
