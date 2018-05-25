@@ -15,6 +15,8 @@
 
 #include "bl.h"
 
+#include "bl_version.h"
+
 #define UDID_START      0x1FFFF7AC
 
 // address of MCU IDCODE
@@ -278,7 +280,7 @@ should_wait(void)
 
 	if (RTC_BKPXR(1) == BL_WAIT_MAGIC) {
 		result = true;
-        RTC_BKPXR(1) = 0;
+        RTC_BKPXR(1) = BL_VERSION_CODE;
 	}
 
     pwr_enable_backup_domain_write_protect();
