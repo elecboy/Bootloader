@@ -147,6 +147,9 @@ candetect_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 camera_dock_v2_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 		make -f Makefile.f0 TARGET_HW=CAMERA_DOCK_V2 LINKER_FILE=stm32f0.ld TARGET_FILE_NAME=$@ upload
 
+charge_box_control_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
+		make -f Makefile.l0 TARGET_HW=CHARGE_BOX_CONTROL_V1 LINKER_FILE=stm32l0.ld TARGET_FILE_NAME=$@ upload
+
 px4mavstation_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f1 TARGET_HW=PX4_MAVSTATION_V1 LINKER_FILE=12K-stm32f1.ld TARGET_FILE_NAME=$@
 
