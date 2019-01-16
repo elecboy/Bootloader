@@ -120,11 +120,7 @@ board_deinit(void)
 static inline void
 clock_init(void)
 {
-#if defined(INTERFACE_USB)
-	rcc_clock_setup_in_hsi_out_48mhz();
-#else
-	rcc_clock_setup_in_hse_out_48mhz();
-#endif
+	rcc_set_hsi48_source_pll();
 }
 
 /**
@@ -143,22 +139,21 @@ void
 clock_deinit(void)
 {
 	/* Enable internal high-speed oscillator. */
-	rcc_osc_on(RCC_HSI);
-	rcc_wait_for_osc_ready(RCC_HSI);
+	rcc_osc_on(RCC_HSI16);
+	rcc_wait_for_osc_ready(RCC_HSI16);
 
 	/* Reset the RCC_CFGR register */
 	RCC_CFGR = 0x000000;
 
 	/* Stop the HSE, CSS, PLL, PLLI2S, PLLSAI */
-	rcc_osc_off(RCC_HSE);
 	rcc_osc_off(RCC_PLL);
-	rcc_css_disable();
-
-	/* Reset the HSEBYP bit */
-	rcc_osc_bypass_disable(RCC_HSE);
-
-	/* Reset the CIR register */
-	RCC_CIR = 0x000000;
+//	rcc_css_disable();
+//
+//	/* Reset the HSEBYP bit */
+//	rcc_osc_bypass_disable(RCC_HSE);
+//
+//	/* Reset the CIR register */
+//	RCC_CIR = 0x000000;
 }
 
 uint32_t
