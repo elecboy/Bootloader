@@ -5,9 +5,21 @@
 #
 # Paths to common dependencies
 #
+export BUILD_DIR_ROOT ?= build
 export BL_BASE		?= $(wildcard .)
 export LIBOPENCM3	?= $(wildcard libopencm3)
+export LIBKINETIS  	?= $(wildcard lib/kinetis/NXP_Kinetis_Bootloader_2_0_0)
 MKFLAGS=--no-print-directory
+
+SRC_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+COLOR_BLUE = \033[0;94m
+NO_COLOR   = \033[m
+
+define colorecho
++@echo -e '${COLOR_BLUE}${1} ${NO_COLOR}'
+endef
+
 #
 # Tools
 #
@@ -23,7 +35,8 @@ export FLAGS		 = -std=gnu99 \
 			   -Wundef \
 			   -Wall \
 			   -fno-builtin \
-			   -I$(LIBOPENCM3)/include \
+			   -I$(BL_BASE)/$(LIBOPENCM3)/include \
+			   -I$(BL_BASE)/. \
 			   -ffunction-sections \
 			   -nostartfiles \
 			   -lnosys \
@@ -31,12 +44,16 @@ export FLAGS		 = -std=gnu99 \
 			   -Wl,-g \
 			   -Werror
 
-export COMMON_SRCS	 = bl.c cdcacm.c  usart.c
+export COMMON_SRCS	 = bl.c
+export ARCH_SRCS	 = cdcacm.c  usart.c
 
 #
 # Bootloaders to build
+# Note: px4fmuv3_bl is the same as px4fmuv2_bl except for a different USB device
+# string
 #
 TARGETS	= \
+	nxphlitev3_bl \
 	aerofcv1_bl \
 	auavx2v1_bl \
 	crazyflie_bl \
@@ -56,7 +73,7 @@ TARGETS	= \
 	px4iov3_bl \
 	tapv1_bl \
 	cube_f4_bl \
-	cube_f7_bl
+	avx_v1_bl
 
 all:	$(TARGETS) sizes
 
@@ -73,6 +90,9 @@ clean:
 #
 # Specific bootloader targets.
 #
+
+nxphlitev3_bl: $(MAKEFILE_LIST) $(LIBKINETIS)
+	${MAKE} ${MKFLAGS} -f  Makefile.k66 TARGET_HW=NXPHLITE_V3  LINKER_FILE=kinetisk66.ld TARGET_FILE_NAME=$@
 
 auavx2v1_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	${MAKE} ${MKFLAGS} -f  Makefile.f4 TARGET_HW=AUAV_X2V1  LINKER_FILE=stm32f4.ld TARGET_FILE_NAME=$@
@@ -118,6 +138,9 @@ cube_f4_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 
 cube_f7_bl:$(MAKEFILE_LIST) $(LIBOPENCM3)
 	${MAKE} ${MKFLAGS} -f  Makefile.f7 TARGET_HW=CUBE_F7 LINKER_FILE=stm32f7.ld TARGET_FILE_NAME=$@
+
+avx_v1_bl:$(MAKEFILE_LIST) $(LIBOPENCM3)
+	${MAKE} ${MKFLAGS} -f  Makefile.f7 TARGET_HW=AV_X_V1 LINKER_FILE=stm32f7.ld TARGET_FILE_NAME=$@
 
 # Default bootloader delay is *very* short, just long enough to catch
 # the board for recovery but not so long as to make restarting after a
@@ -165,10 +188,18 @@ $(LIBOPENCM3): checksubmodules
 	${MAKE} -C $(LIBOPENCM3) lib
 
 .PHONY: checksubmodules
-checksubmodules: updatesubmodules
+checksubmodules:
 	$(Q) ($(BL_BASE)/Tools/check_submodules.sh)
 
-.PHONY: updatesubmodules
-updatesubmodules:
-	$(Q) (git submodule init)
-	$(Q) (git submodule update)
+# Astyle
+# --------------------------------------------------------------------
+.PHONY: check_format format
+
+check_format:
+	$(call colorecho,'Checking formatting with astyle')
+	@$(SRC_DIR)/Tools/check_code_style_all.sh
+	@cd $(SRC_DIR) && git diff --check
+
+format:
+	$(call colorecho,'Formatting with astyle')
+	@$(SRC_DIR)/Tools/check_code_style_all.sh --fix

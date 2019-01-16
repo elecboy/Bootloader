@@ -177,10 +177,13 @@ static const struct rcc_clock_scale clock_setup = {
 	.ppre1 = RCC_CFGR_PPRE_DIV_4,
 	.ppre2 = RCC_CFGR_PPRE_DIV_2,
 	.power_save = 0,
-	.flash_config = FLASH_ACR_ICE | FLASH_ACR_DCE | FLASH_ACR_LATENCY_5WS,
+	.flash_config = FLASH_ACR_ICEN | FLASH_ACR_DCEN | FLASH_ACR_LATENCY_5WS,
 	.apb1_frequency = 42000000,
 	.apb2_frequency = 84000000,
 };
+
+/* State of an inserted USB cable */
+static bool usb_connected = false;
 
 static uint32_t
 board_get_rtc_signature()
@@ -299,7 +302,7 @@ board_test_usart_receiving_break()
 	while (cnt < 60) {
 		// Only read pin when SysTick timer is true
 		if (systick_get_countflag() == 1) {
-			if (gpio_get(BOARD_PORT_USART, BOARD_PIN_RX) == 0) {
+			if (gpio_get(BOARD_PORT_USART_RX, BOARD_PIN_RX) == 0) {
 				cnt_consecutive_low++;	// Increment the consecutive low counter
 
 			} else {
@@ -326,18 +329,31 @@ board_test_usart_receiving_break()
 	if (cnt_consecutive_low >= 18) {
 		return true;
 	}
+
 #endif // !defined(SERIAL_BREAK_DETECT_DISABLED)
 
 	return false;
 }
 #endif
 
+uint32_t
+board_get_devices(void)
+{
+	uint32_t devices = BOOT_DEVICES_SELECTION;
+
+	if (usb_connected) {
+		devices &= BOOT_DEVICES_FILTER_ONUSB;
+	}
+
+	return devices;
+}
+
 static void
 board_init(void)
 {
 	/* fix up the max firmware size, we have to read memory to get this */
 	board_info.fw_size = APP_SIZE_MAX;
-#if defined(TARGET_HW_PX4_FMU_V2) || defined(TARGET_HW_PX4_FMU_V4)
+#if defined(TARGET_HW_PX4_FMU_V2) || defined(TARGET_HW_PX4_FMU_V3) || defined(TARGET_HW_PX4_FMU_V4)
 
 	if (check_silicon() && board_info.fw_size == (2 * 1024 * 1024) - BOOTLOADER_RESERVATION_SIZE) {
 		board_info.fw_size = (1024 * 1024) - BOOTLOADER_RESERVATION_SIZE;
@@ -360,13 +376,15 @@ board_init(void)
 
 #if INTERFACE_USART
 	/* configure USART pins */
-	rcc_peripheral_enable_clock(&BOARD_USART_PIN_CLOCK_REGISTER, BOARD_USART_PIN_CLOCK_BIT);
+	rcc_peripheral_enable_clock(&BOARD_USART_PIN_CLOCK_REGISTER, BOARD_USART_PIN_CLOCK_BIT_TX);
+	rcc_peripheral_enable_clock(&BOARD_USART_PIN_CLOCK_REGISTER, BOARD_USART_PIN_CLOCK_BIT_RX);
 
 	/* Setup GPIO pins for USART transmit. */
-	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_AF, GPIO_PUPD_PULLUP, BOARD_PIN_TX | BOARD_PIN_RX);
+	gpio_mode_setup(BOARD_PORT_USART_TX, GPIO_MODE_AF, GPIO_PUPD_PULLUP, BOARD_PIN_TX);
+	gpio_mode_setup(BOARD_PORT_USART_RX, GPIO_MODE_AF, GPIO_PUPD_PULLUP, BOARD_PIN_RX);
 	/* Setup USART TX & RX pins as alternate function. */
-	gpio_set_af(BOARD_PORT_USART, BOARD_PORT_USART_AF, BOARD_PIN_TX);
-	gpio_set_af(BOARD_PORT_USART, BOARD_PORT_USART_AF, BOARD_PIN_RX);
+	gpio_set_af(BOARD_PORT_USART_TX, BOARD_PORT_USART_AF, BOARD_PIN_TX);
+	gpio_set_af(BOARD_PORT_USART_RX, BOARD_PORT_USART_AF, BOARD_PIN_RX);
 
 	/* configure USART clock */
 	rcc_peripheral_enable_clock(&BOARD_USART_CLOCK_REGISTER, BOARD_USART_CLOCK_BIT);
@@ -412,7 +430,8 @@ board_deinit(void)
 
 #if INTERFACE_USART
 	/* deinitialise GPIO pins for USART transmit. */
-	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_PIN_TX | BOARD_PIN_RX);
+	gpio_mode_setup(BOARD_PORT_USART_TX, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_PIN_TX);
+	gpio_mode_setup(BOARD_PORT_USART_RX, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_PIN_RX);
 
 	/* disable USART peripheral clock */
 	rcc_peripheral_disable_clock(&BOARD_USART_CLOCK_REGISTER, BOARD_USART_CLOCK_BIT);
@@ -619,7 +638,7 @@ int get_mcu_desc(int max, uint8_t *revstr)
 
 int check_silicon(void)
 {
-#if defined(TARGET_HW_PX4_FMU_V2) || defined(TARGET_HW_PX4_FMU_V4)
+#if defined(TARGET_HW_PX4_FMU_V2)  || defined(TARGET_HW_PX4_FMU_V3) || defined(TARGET_HW_PX4_FMU_V4)
 	uint32_t idcode = (*(uint32_t *)DBGMCU_IDCODE);
 	mcu_rev_e revid = (idcode & REVID_MASK) >> 16;
 
@@ -786,11 +805,13 @@ main(void)
 #if defined(BOARD_USB_VBUS_SENSE_DISABLED)
 	try_boot = false;
 #else
-	if (gpio_get(BOARD_PORT_VBUS, BOARD_PIN_VBUS) != 0) {
 
+	if (gpio_get(BOARD_PORT_VBUS, BOARD_PIN_VBUS) != 0) {
+		usb_connected = true;
 		/* don't try booting before we set up the bootloader */
 		try_boot = false;
 	}
+
 #endif
 #endif
 

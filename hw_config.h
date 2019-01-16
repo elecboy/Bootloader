@@ -30,8 +30,7 @@
  * USBPRODUCTID         0x0011                - PID Should match defconfig
  * BOOT_DELAY_ADDRESS   0x000001a0            - (Optional) From the linker script from Linker Script to get a custom
  *                                               delay provided by an APP FW
-
-*  BOARD_TYPE           9                     - Must match .prototype boad_id
+ * BOARD_TYPE           9                     - Must match .prototype boad_id
  * _FLASH_KBYTES        (*(uint16_t *)0x1fff7a22) - Run time flash size detection
  * BOARD_FLASH_SECTORS  ((_FLASH_KBYTES == 0x400) ? 11 : 23) - Run time determine the physical last sector
  * BOARD_FLASH_SECTORS   11                   - Hard coded zero based last sector
@@ -56,6 +55,12 @@
  *
  * * Other defines are somewhat self explanatory.
  */
+
+/* Boot device selection list*/
+#define USB0_DEV	0x01
+#define SERIAL0_DEV	0x02
+#define SERIAL1_DEV	0x04
+
 #if  defined(TARGET_HW_PX4_FMU_V1)
 
 # define APP_LOAD_ADDRESS               0x08004000
@@ -349,7 +354,7 @@
 # define BOARD_PIN_LED_ACTIVITY         GPIO7 // BLUE
 # define BOARD_PIN_LED_BOOTLOADER       GPIO6 // GREEN
 # define BOARD_PORT_LEDS                GPIOC
-# define BOARD_CLOCK_LEDS               RCC_AHB1ENR_IOPCEN
+# define BOARD_CLOCK_LEDS               RCC_AHB1ENR_GPIOCEN
 # define BOARD_LED_ON                   gpio_clear
 # define BOARD_LED_OFF                  gpio_set
 
@@ -362,7 +367,7 @@
 # define BOARD_PIN_TX     				GPIO5
 # define BOARD_PIN_RX		     		GPIO6
 # define BOARD_USART_PIN_CLOCK_REGISTER RCC_AHB1ENR
-# define BOARD_USART_PIN_CLOCK_BIT  	RCC_AHB1ENR_IOPDEN
+# define BOARD_USART_PIN_CLOCK_BIT  	RCC_AHB1ENR_GPIODEN
 # define SERIAL_BREAK_DETECT_DISABLED   1
 
 /*
@@ -792,7 +797,7 @@
 
 #elif  defined(TARGET_HW_OMNIBUSF4SD)
 
-# define APP_LOAD_ADDRESS               0x08004000
+# define APP_LOAD_ADDRESS               0x08008000
 # define BOOTLOADER_DELAY               5000
 # define BOARD_OMNIBUSF4SD
 # define INTERFACE_USB                  1
@@ -803,6 +808,8 @@
 # define BOARD_TYPE                     42
 # define BOARD_FLASH_SECTORS            11
 # define BOARD_FLASH_SIZE               (1024 * 1024)
+# define BOARD_FIRST_FLASH_SECTOR_TO_ERASE	1
+# define APP_RESERVATION_SIZE			(1 * 16 * 1024) /* 1 16 Kib Sectors */
 
 # define OSC_FREQ                       8
 
@@ -925,6 +932,46 @@
 # define BOARD_FORCE_BL_STATE			1
 
 /****************************************************************************
+ * TARGET_HW_NXPHLITE_V3
+ ****************************************************************************/
+
+#elif  defined(TARGET_HW_NXPHLITE_V3)
+# define APP_LOAD_ADDRESS               0x00006000  // Reserve 24K for BL
+# define BOOTLOADER_DELAY               5000
+# define BOARD_NXPHLITEV3
+# define INTERFACE_USB                  1
+# define INTERFACE_USART                0
+# define USBDEVICESTRING                "PX4 BL NXPHlite v3.x"
+# define USBPRODUCTID                   0x0011
+
+# define BOARD_TYPE                     28
+# define _FLASH_KBYTES                  2048
+# define FLASH_SECTOR_SIZE              4096
+# define BOARD_FLASH_SIZE               (_FLASH_KBYTES * 1024)
+# define BOARD_FLASH_SECTORS            ((BOARD_FLASH_SIZE / FLASH_SECTOR_SIZE)- \
+		(BOOTLOADER_RESERVATION_SIZE/FLASH_SECTOR_SIZE))
+
+# define OSC_FREQ                       16
+
+# define BOARD_PIN_LED_ACTIVITY         14                   // green LED
+# define BOARD_PIN_LED_BOOTLOADER       13                   // Amber LED
+# define BOARD_PORT_LEDS                D
+# define BOARD_LED_ON                   GPIO_ClearPinsOutput
+# define BOARD_LED_OFF                  GPIO_SetPinsOutput
+
+# define BOARD_USART                    4
+# define BOARD_PORT_USART               C
+# define BOARD_PORT_USART_AF            kPORT_MuxAlt3
+# define BOARD_PIN_TX                   15
+# define BOARD_PIN_RX                   14
+
+# define BOARD_PORT_VBUS                E
+# define BOARD_PIN_VBUS                 8
+
+# define SERIAL_BREAK_DETECT_DISABLED   1
+# define USB_DATA_ALIGN __attribute__((aligned(2)))
+
+/****************************************************************************
  * TARGET_HW_CUBE_F4
  ****************************************************************************/
 
@@ -982,60 +1029,35 @@
  */
 
 /****************************************************************************
- * TARGET_HW_CUBE_F7
+ * TARGET_HW_AV_V1
  ****************************************************************************/
 
-#elif  defined(TARGET_HW_CUBE_F7)
+#elif  defined(TARGET_HW_AV_X_V1)
 
 # define APP_LOAD_ADDRESS               0x08008000
 # define BOOTLOADER_DELAY               5000
-# define INTERFACE_USB                  1
+# define INTERFACE_USB                  0
 # define INTERFACE_USART                1
-# define USBDEVICESTRING                "ProfiCNC CUBE F7 BL"
-# define USBPRODUCTID                   0x0002
-# define USBMFGSTRING                   "Hex Technology Limited"
-# define USBVENDORID                    0x2DAE
 # define BOOT_DELAY_ADDRESS             0x000001a0
 
-# define BOARD_TYPE                     50
+# define BOARD_TYPE                     29
 # define _FLASH_KBYTES                  (*(uint16_t *)0x1ff0f442)
 # define BOARD_FLASH_SECTORS            ((_FLASH_KBYTES == 0x400) ? 7 : 11)
 # define BOARD_FLASH_SIZE               (_FLASH_KBYTES * 1024)
 
 # define OSC_FREQ                       16
 
-# define BOARD_PIN_LED_ACTIVITY         GPIO7 // BLUE
-# define BOARD_PIN_LED_BOOTLOADER       GPIO6 // GREEN
-# define BOARD_PORT_LEDS                GPIOC
-# define BOARD_CLOCK_LEDS               RCC_AHB1ENR_IOPCEN
-# define BOARD_LED_ON                   gpio_clear
-# define BOARD_LED_OFF                  gpio_set
+# define BOARD_USART                    UART8
+# define BOARD_USART_CLOCK_REGISTER     RCC_APB1ENR
+# define BOARD_USART_CLOCK_BIT          RCC_APB1ENR_UART8EN
 
-# define BOARD_USART  					USART2
-# define BOARD_USART_CLOCK_REGISTER 	RCC_APB1ENR
-# define BOARD_USART_CLOCK_BIT      	RCC_APB1ENR_USART2EN
-
-# define BOARD_PORT_USART   			GPIOD
-# define BOARD_PORT_USART_AF 			GPIO_AF7
-# define BOARD_PIN_TX     				GPIO5
-# define BOARD_PIN_RX		     		GPIO6
+# define BOARD_PORT_USART               GPIOE
+# define BOARD_PORT_USART_AF            GPIO_AF7
+# define BOARD_PIN_TX                   GPIO1
+# define BOARD_PIN_RX                   GPIO0
 # define BOARD_USART_PIN_CLOCK_REGISTER RCC_AHB1ENR
-# define BOARD_USART_PIN_CLOCK_BIT  	RCC_AHB1ENR_IOPDEN
+# define BOARD_USART_PIN_CLOCK_BIT      RCC_AHB1ENR_GPIODEN
 # define SERIAL_BREAK_DETECT_DISABLED   1
-
-/*
- * Uncommenting this allows to force the bootloader through
- * a PWM output pin. As this can accidentally initialize
- * an ESC prematurely, it is not recommended. This feature
- * has not been used and hence defaults now to off.
- *
- * # define BOARD_FORCE_BL_PIN_OUT         GPIO14
- * # define BOARD_FORCE_BL_PIN_IN          GPIO11
- * # define BOARD_FORCE_BL_PORT            GPIOE
- * # define BOARD_FORCE_BL_CLOCK_REGISTER  RCC_AHB1ENR
- * # define BOARD_FORCE_BL_CLOCK_BIT       RCC_AHB1ENR_IOPEEN
- * # define BOARD_FORCE_BL_PULL            GPIO_PUPD_PULLUP
-*/
 
 #else
 # error Undefined Target Hardware
@@ -1061,6 +1083,29 @@
 #  define USART_BAUDRATE OVERRIDE_USART_BAUDRATE
 #else
 #  define USART_BAUDRATE 115200
+#endif
+
+#if INTERFACE_USART
+#  if !defined(BOARD_PORT_USART_TX)
+#    define BOARD_PORT_USART_TX BOARD_PORT_USART
+#    define BOARD_PORT_USART_RX BOARD_PORT_USART
+#  endif
+#  if !defined(BOARD_USART_PIN_CLOCK_BIT_TX)
+#    define BOARD_USART_PIN_CLOCK_BIT_TX BOARD_USART_PIN_CLOCK_BIT
+#    define BOARD_USART_PIN_CLOCK_BIT_RX BOARD_USART_PIN_CLOCK_BIT
+#  endif
+#endif
+
+#if !defined(USB_DATA_ALIGN)
+# define USB_DATA_ALIGN
+#endif
+
+#ifndef BOOT_DEVICES_SELECTION
+#  define BOOT_DEVICES_SELECTION USB0_DEV|SERIAL0_DEV|SERIAL1_DEV
+#endif
+
+#ifndef BOOT_DEVICES_FILTER_ONUSB
+#  define BOOT_DEVICES_FILTER_ONUSB USB0_DEV|SERIAL0_DEV|SERIAL1_DEV
 #endif
 
 #endif /* HW_CONFIG_H_ */

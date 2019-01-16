@@ -6,16 +6,26 @@
 #include "hw_config.h"
 
 #include <stdlib.h>
+
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/pwr.h>
-# include <libopencm3/stm32/timer.h>
 
 #include "bl.h"
 #include "uart.h"
+
+#if !defined(USART6)
+#  define USART6    USART6_BASE
+#endif
+#if !defined(UART6)
+#  define UART7    UART7_BASE
+#endif
+#if !defined(USART8)
+#  define UART8    UART8_BASE
+#endif
 
 /* flash parameters that we should not really know */
 static struct {
@@ -134,34 +144,42 @@ static void board_init(void);
 #define POWER_DOWN_RTC_SIGNATURE    0xdeaddead // Written by app fw to not re-power on.
 #define BOOT_RTC_REG                MMIO32(RTC_BASE + 0x50)
 
-/* standard clocking for all F7 boards */
+/* standard clocking for all F7 boards: 216MHz w/ overdrive
+ *
+ * f_voc = f_osc * (PLLN / PLLM) = OSC_FREQ * PLLN / OSC_FREQ = PLLN = 432
+ * f_pll = f_voc / PLLP = PLLN / PLLP = 216
+ * f_usb_sdmmc = f_voc / PLLQ = 48
+ */
 static const struct rcc_clock_scale clock_setup = {
-	.pllm = 8,
-	.plln = 216,
+	/* 216MHz */
+	.plln = 432,
 	.pllp = 2,
 	.pllq = 9,
-	.pllr = 2,
+	.flash_waitstates = 7,
 	.hpre = RCC_CFGR_HPRE_DIV_NONE,
 	.ppre1 = RCC_CFGR_PPRE_DIV_4,
 	.ppre2 = RCC_CFGR_PPRE_DIV_2,
-	.power_save = 0,
-	.flash_config = FLASH_ACR_ICE | FLASH_ACR_DCE | FLASH_ACR_LATENCY_5WS,
+	.vos_scale = PWR_SCALE1, /** <= 180MHz w/o overdrive, <= 216MHz w/ overdrive */
+	.overdrive = 1,
 	.apb1_frequency = 54000000,
 	.apb2_frequency = 108000000,
 };
+
+/* State of an inserted USB cable */
+static bool usb_connected = false;
 
 static uint32_t
 board_get_rtc_signature()
 {
 	/* enable the backup registers */
-	PWR_CR |= PWR_CR_DBP;
+	PWR_CR1 |= PWR_CR1_DBP;
 	RCC_BDCR |= RCC_BDCR_RTCEN;
 
 	uint32_t result = BOOT_RTC_REG;
 
 	/* disable the backup registers */
 	RCC_BDCR &= RCC_BDCR_RTCEN;
-	PWR_CR &= ~PWR_CR_DBP;
+	PWR_CR1 &= ~PWR_CR1_DBP;
 
 	return result;
 }
@@ -170,14 +188,14 @@ static void
 board_set_rtc_signature(uint32_t sig)
 {
 	/* enable the backup registers */
-	PWR_CR |= PWR_CR_DBP;
+	PWR_CR1 |= PWR_CR1_DBP;
 	RCC_BDCR |= RCC_BDCR_RTCEN;
 
 	BOOT_RTC_REG = sig;
 
 	/* disable the backup registers */
 	RCC_BDCR &= RCC_BDCR_RTCEN;
-	PWR_CR &= ~PWR_CR_DBP;
+	PWR_CR1 &= ~PWR_CR1_DBP;
 }
 
 static bool
@@ -267,7 +285,7 @@ board_test_usart_receiving_break()
 	while (cnt < 60) {
 		// Only read pin when SysTick timer is true
 		if (systick_get_countflag() == 1) {
-			if (gpio_get(BOARD_PORT_USART, BOARD_PIN_RX) == 0) {
+			if (gpio_get(BOARD_PORT_USART_RX, BOARD_PIN_RX) == 0) {
 				cnt_consecutive_low++;	// Increment the consecutive low counter
 
 			} else {
@@ -294,11 +312,24 @@ board_test_usart_receiving_break()
 	if (cnt_consecutive_low >= 18) {
 		return true;
 	}
+
 #endif // !defined(SERIAL_BREAK_DETECT_DISABLED)
 
 	return false;
 }
 #endif
+
+uint32_t
+board_get_devices(void)
+{
+	uint32_t devices = BOOT_DEVICES_SELECTION;
+
+	if (usb_connected) {
+		devices &= BOOT_DEVICES_FILTER_ONUSB;
+	}
+
+	return devices;
+}
 
 static void
 board_init(void)
@@ -315,20 +346,24 @@ board_init(void)
 #endif
 
 #if INTERFACE_USB
-
 	/* enable Port A GPIO9 to sample VBUS */
-	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
+	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_GPIOAEN);
+#  if defined(USE_VBUS_PULL_DOWN)
+	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, GPIO9);
+#  endif
 #endif
 
 #if INTERFACE_USART
 	/* configure USART pins */
-	rcc_peripheral_enable_clock(&BOARD_USART_PIN_CLOCK_REGISTER, BOARD_USART_PIN_CLOCK_BIT);
+	rcc_peripheral_enable_clock(&BOARD_USART_PIN_CLOCK_REGISTER, BOARD_USART_PIN_CLOCK_BIT_TX);
+	rcc_peripheral_enable_clock(&BOARD_USART_PIN_CLOCK_REGISTER, BOARD_USART_PIN_CLOCK_BIT_RX);
 
 	/* Setup GPIO pins for USART transmit. */
-	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_AF, GPIO_PUPD_PULLUP, BOARD_PIN_TX | BOARD_PIN_RX);
+	gpio_mode_setup(BOARD_PORT_USART_TX, GPIO_MODE_AF, GPIO_PUPD_PULLUP, BOARD_PIN_TX);
+	gpio_mode_setup(BOARD_PORT_USART_RX, GPIO_MODE_AF, GPIO_PUPD_PULLUP, BOARD_PIN_RX);
 	/* Setup USART TX & RX pins as alternate function. */
-	gpio_set_af(BOARD_PORT_USART, BOARD_PORT_USART_AF, BOARD_PIN_TX);
-	gpio_set_af(BOARD_PORT_USART, BOARD_PORT_USART_AF, BOARD_PIN_RX);
+	gpio_set_af(BOARD_PORT_USART_TX, BOARD_PORT_USART_AF, BOARD_PIN_TX);
+	gpio_set_af(BOARD_PORT_USART_RX, BOARD_PORT_USART_AF, BOARD_PIN_RX);
 
 	/* configure USART clock */
 	rcc_peripheral_enable_clock(&BOARD_USART_CLOCK_REGISTER, BOARD_USART_CLOCK_BIT);
@@ -348,6 +383,7 @@ board_init(void)
 	gpio_mode_setup(BOARD_FORCE_BL_PORT, GPIO_MODE_INPUT, BOARD_FORCE_BL_PULL, BOARD_FORCE_BL_PIN);
 #endif
 
+#if defined(BOARD_CLOCK_LEDS)
 	/* initialise LEDs */
 	rcc_peripheral_enable_clock(&RCC_AHB1ENR, BOARD_CLOCK_LEDS);
 	gpio_mode_setup(
@@ -363,7 +399,7 @@ board_init(void)
 	BOARD_LED_ON(
 		BOARD_PORT_LEDS,
 		BOARD_PIN_LED_BOOTLOADER | BOARD_PIN_LED_ACTIVITY);
-
+#endif
 	/* enable the power controller clock */
 	rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_PWREN);
 }
@@ -374,7 +410,8 @@ board_deinit(void)
 
 #if INTERFACE_USART
 	/* deinitialise GPIO pins for USART transmit. */
-	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_PIN_TX | BOARD_PIN_RX);
+	gpio_mode_setup(BOARD_PORT_USART_TX, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_PIN_TX);
+	gpio_mode_setup(BOARD_PORT_USART_RX, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_PIN_RX);
 
 	/* disable USART peripheral clock */
 	rcc_peripheral_disable_clock(&BOARD_USART_CLOCK_REGISTER, BOARD_USART_CLOCK_BIT);
@@ -399,12 +436,14 @@ board_deinit(void)
 	gpio_mode_setup(BOARD_POWER_PORT, GPIO_MODE_INPUT, GPIO_PUPD_NONE, BOARD_POWER_PIN);
 #endif
 
+#if defined(BOARD_CLOCK_LEDS)
 	/* deinitialise LEDs */
 	gpio_mode_setup(
 		BOARD_PORT_LEDS,
 		GPIO_MODE_INPUT,
 		GPIO_PUPD_NONE,
 		BOARD_PIN_LED_BOOTLOADER | BOARD_PIN_LED_ACTIVITY);
+#endif
 
 	/* disable the power controller clock */
 	rcc_peripheral_disable_clock(&RCC_APB1ENR, RCC_APB1ENR_PWREN);
@@ -421,7 +460,7 @@ board_deinit(void)
 static inline void
 clock_init(void)
 {
-	rcc_clock_setup_hse_3v3(&clock_setup);
+	rcc_clock_setup_hse(&clock_setup, OSC_FREQ);
 }
 
 /**
@@ -624,11 +663,15 @@ led_on(unsigned led)
 {
 	switch (led) {
 	case LED_ACTIVITY:
+#if defined(BOARD_PIN_LED_ACTIVITY)
 		BOARD_LED_ON(BOARD_PORT_LEDS, BOARD_PIN_LED_ACTIVITY);
+#endif
 		break;
 
 	case LED_BOOTLOADER:
+#if defined(BOARD_PIN_LED_BOOTLOADER)
 		BOARD_LED_ON(BOARD_PORT_LEDS, BOARD_PIN_LED_BOOTLOADER);
+#endif
 		break;
 	}
 }
@@ -638,11 +681,15 @@ led_off(unsigned led)
 {
 	switch (led) {
 	case LED_ACTIVITY:
+#if defined(BOARD_PIN_LED_ACTIVITY)
 		BOARD_LED_OFF(BOARD_PORT_LEDS, BOARD_PIN_LED_ACTIVITY);
+#endif
 		break;
 
 	case LED_BOOTLOADER:
+#if defined(BOARD_PIN_LED_BOOTLOADER)
 		BOARD_LED_OFF(BOARD_PORT_LEDS, BOARD_PIN_LED_BOOTLOADER);
+#endif
 		break;
 	}
 }
@@ -652,11 +699,15 @@ led_toggle(unsigned led)
 {
 	switch (led) {
 	case LED_ACTIVITY:
+#if defined(BOARD_PIN_LED_ACTIVITY)
 		gpio_toggle(BOARD_PORT_LEDS, BOARD_PIN_LED_ACTIVITY);
+#endif
 		break;
 
 	case LED_BOOTLOADER:
+#if defined(BOARD_PIN_LED_BOOTLOADER)
 		gpio_toggle(BOARD_PORT_LEDS, BOARD_PIN_LED_BOOTLOADER);
+#endif
 		break;
 	}
 }
@@ -766,7 +817,7 @@ main(void)
 #else
 
 	if (gpio_get(GPIOA, GPIO9) != 0) {
-
+		usb_connected = true;
 		/* don't try booting before we set up the bootloader */
 		try_boot = false;
 	}

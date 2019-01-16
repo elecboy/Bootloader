@@ -80,6 +80,8 @@
 //
 
 #define BL_PROTOCOL_VERSION 		5		// The revision of the bootloader protocol
+//* Next revision needs to update
+
 // protocol bytes
 #define PROTO_INSYNC				0x12    // 'in sync' byte sent before status
 #define PROTO_EOC					0x20    // end of command
@@ -89,6 +91,8 @@
 #define PROTO_FAILED				0x11    // INSYNC/FAILED  - 'fail' response
 #define PROTO_INVALID				0x13	// INSYNC/INVALID - 'invalid' response for bad commands
 #define PROTO_BAD_SILICON_REV 		0x14 	// On the F4 series there is an issue with < Rev 3 silicon
+#define PROTO_RESERVED_0X15     0x15  // Reserved
+
 // see https://pixhawk.org/help/errata
 // Command bytes
 #define PROTO_GET_SYNC				0x21    // NOP for re-establishing sync
@@ -103,6 +107,12 @@
 #define PROTO_GET_CHIP_DES			0x2e    // read chip version In ASCII
 #define PROTO_BOOT					0x30    // boot the application
 #define PROTO_DEBUG					0x31    // emit debug information - format not defined
+#define PROTO_SET_BAUD				0x33    // set baud rate on uart
+
+#define PROTO_RESERVED_0X36     0x36  // Reserved
+#define PROTO_RESERVED_0X37     0x37  // Reserved
+#define PROTO_RESERVED_0X38     0x38  // Reserved
+#define PROTO_RESERVED_0X39     0x39  // Reserved
 
 #define PROTO_PROG_MULTI_MAX    64	// maximum PROG_MULTI size
 #define PROTO_READ_MULTI_MAX    255	// size of the size field
@@ -143,11 +153,11 @@ inline void cfini(void)
 	uart_cfini();
 #endif
 }
-inline int cin(void)
+inline int cin(uint32_t devices)
 {
 #if INTERFACE_USB
 
-	if (bl_type == NONE || bl_type == USB) {
+	if ((bl_type == NONE || bl_type == USB) && (devices & USB0_DEV) != 0) {
 		int usb_in = usb_cin();
 
 		if (usb_in >= 0) {
@@ -160,7 +170,7 @@ inline int cin(void)
 
 #if INTERFACE_USART
 
-	if (bl_type == NONE || bl_type == USART) {
+	if ((bl_type == NONE || bl_type == USART) && (devices & SERIAL0_DEV) != 0) {
 		int	uart_in = uart_cin();
 
 		if (uart_in >= 0) {
@@ -197,7 +207,7 @@ inline void cout(uint8_t *buf, unsigned len)
 static const uint32_t	bl_proto_rev = BL_PROTOCOL_VERSION;	// value returned by PROTO_DEVICE_BL_REV
 
 static unsigned head, tail;
-static uint8_t rx_buf[256];
+static uint8_t rx_buf[256] USB_DATA_ALIGN;
 
 static enum led_state {LED_BLINK, LED_ON, LED_OFF} _led_state;
 
@@ -392,7 +402,7 @@ cin_wait(unsigned timeout)
 	timer[TIMER_CIN] = timeout;
 
 	do {
-		c = cin();
+		c = cin(board_get_devices());
 
 		if (c >= 0) {
 			cin_count++;
@@ -684,9 +694,9 @@ bootloader(unsigned timeout)
 
 #if defined(TARGET_HW_PX4_FMU_V4)
 
-			if (check_silicon()) {
-				goto bad_silicon;
-			}
+				if (check_silicon()) {
+					goto bad_silicon;
+				}
 
 #endif
 

@@ -1,6 +1,6 @@
 /************************************************************************
  *
- *   Copyright (c) 2012-2014 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2018 PX4 Development Team. All rights reserved.
  *   Copyright (c) 2010 libopencm3 project
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,70 +29,30 @@
  */
 
 #include "hw_config.h"
+#include <stdint.h>
 
-# include <libopencm3/stm32/rcc.h>
-# include <libopencm3/stm32/gpio.h>
-
-#include <libopencm3/stm32/usart.h>
-
-#if !defined(USART_SR)
-#define USART_SR USART_ISR
-#endif
 #include "bl.h"
 #include "uart.h"
 
 uint32_t usart;
+#if defined(INTERFACE_USART) && INTERFACE_USART > 0
+# error "UART driver for K66 is incomplete - please add it if needed!"
+#endif
 
 void
 uart_cinit(void *config)
 {
-	usart = (uint32_t)config;
-
-	/* board is expected to do pin and clock setup */
-
-	/* do usart setup */
-	//USART_CR1(usart) |= (1 << 15);	/* because libopencm3 doesn't know the OVER8 bit */
-	usart_set_baudrate(usart, USART_BAUDRATE);
-	usart_set_databits(usart, 8);
-	usart_set_stopbits(usart, USART_STOPBITS_1);
-	usart_set_mode(usart, USART_MODE_TX_RX);
-	usart_set_parity(usart, USART_PARITY_NONE);
-	usart_set_flow_control(usart, USART_FLOWCONTROL_NONE);
-
-	/* and enable */
-	usart_enable(usart);
-
-
-#if 0
-	usart_send_blocking(usart, 'B');
-	usart_send_blocking(usart, 'B');
-	usart_send_blocking(usart, 'B');
-	usart_send_blocking(usart, 'B');
-
-	while (true) {
-		int c;
-		c = usart_recv_blocking(usart);
-		usart_send_blocking(usart, c);
-	}
-
-#endif
 }
 
 void
 uart_cfini(void)
 {
-	usart_disable(usart);
 }
 
 int
 uart_cin(void)
 {
 	int c = -1;
-
-	if (USART_SR(usart) & USART_SR_RXNE) {
-		c = usart_recv(usart);
-	}
-
 	return c;
 }
 
@@ -100,6 +60,6 @@ void
 uart_cout(uint8_t *buf, unsigned len)
 {
 	while (len--) {
-		usart_send_blocking(usart, *buf++);
+		buf++;
 	}
 }
