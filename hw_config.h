@@ -676,6 +676,49 @@
 # define FLASH_SECTOR_SIZE              0x400
 
 /****************************************************************************
+ * TARGET_HW_CHARGE_BOX_CONTROL
+ ****************************************************************************/
+#elif  defined(TARGET_HW_CHARGE_BOX_CONTROL)
+
+# define APP_LOAD_ADDRESS               0x08002000
+# define APP_SIZE_MAX                   0xe000
+# define BOOTLOADER_DELAY               2000
+# define BOARD_CHARGE_BOX_CONTROL
+# define INTERFACE_USB                	0
+# define INTERFACE_USART                1
+# define USBDEVICESTRING                "Charge Box Control"
+# define USBPRODUCTID                   0x0001
+
+# define OSC_FREQ                       48
+
+# define BOARD_PIN_LED_ACTIVITY         GPIO4
+# define BOARD_PIN_LED_BOOTLOADER       GPIO5
+# define BOARD_PORT_LEDS                GPIOA
+# define BOARD_CLOCK_LEDS               RCC_GPIOA
+# define BOARD_LED_ON                   gpio_set
+# define BOARD_LED_OFF                  gpio_clear
+
+# define BOARD_USART                    USART2
+# define BOARD_USART_CLOCK              RCC_USART2
+//# define USART_STOPBITS_1               USART_CR2_STOP_1_0BIT
+# define USART_SR_RXNE                  USART_ISR_RXNE
+
+# define BOARD_PORT_USART               GPIOA
+# define BOARD_PIN_TX                   GPIO2
+# define BOARD_PIN_RX                   GPIO3
+# define BOARD_USART_PIN_CLOCK          RCC_GPIOA
+
+# define BOARD_FORCE_BL_PIN             GPIO13
+# define BOARD_FORCE_BL_PORT            GPIOC
+# define BOARD_FORCE_BL_CLOCK           RCC_GPIOC
+# define BOARD_FORCE_BL_PULL            GPIO_PUPD_PULLUP
+# define BOARD_FORCE_BL_VALUE           0
+
+# define BOARD_FLASH_SECTORS            56
+# define BOARD_TYPE                     103
+# define FLASH_SECTOR_SIZE              0x400
+
+/****************************************************************************
  * TARGET_HW_PX4_AEROCORE_V1
  ****************************************************************************/
 
