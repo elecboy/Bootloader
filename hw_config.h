@@ -657,7 +657,7 @@
 
 # define BOARD_USART                    USART1
 # define BOARD_USART_CLOCK              RCC_USART1
-# define USART_STOPBITS_1               USART_CR2_STOP_1_0BIT
+//# define USART_STOPBITS_1               USART_CR2_STOP_1_0BIT
 # define USART_SR_RXNE                  USART_ISR_RXNE
 
 # define BOARD_PORT_USART               GPIOA

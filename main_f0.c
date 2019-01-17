@@ -96,7 +96,7 @@ board_deinit(void)
 	/* disable the backup registers */
 //	rcc_peripheral_disable_clock(&RCC_APB1ENR, RCC_APB1ENR_PWREN);
 
-#ifdef INTERFACE_USART
+#if INTERFACE_USART
 	/* configure usart pins */
 	gpio_mode_setup(BOARD_PORT_USART, GPIO_MODE_INPUT,
 		      GPIO_PUPD_NONE, BOARD_PIN_TX | BOARD_PIN_RX);
@@ -112,6 +112,12 @@ board_deinit(void)
 	RCC_APB2ENR = 0x00000000; // XXX Magic reset number from STM32F0x reference manual
 }
 
+uint32_t
+board_get_devices(void)
+{
+	return BOOT_DEVICES_SELECTION;
+}
+
 /**
   * @brief  Initializes the RCC clock configuration.
   *
@@ -120,10 +126,10 @@ board_deinit(void)
 static inline void
 clock_init(void)
 {
-#if defined(INTERFACE_USB)
+#if INTERFACE_USB
 	rcc_clock_setup_in_hsi_out_48mhz();
 #else
-	rcc_clock_setup_in_hse_out_48mhz();
+	rcc_clock_setup_in_hsi_out_48mhz();
 #endif
 }
 

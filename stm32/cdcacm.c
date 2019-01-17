@@ -36,8 +36,9 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/flash.h>
+#if INTERFACE_USB != 0
 #include <libopencm3/usb/dwc/otg_fs.h>
-
+#endif
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/usb/usbd.h>
