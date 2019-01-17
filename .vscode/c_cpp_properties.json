@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "ARM",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Drivers/CMSIS/Includelibopencm3/include/libopencm3/stm32",
+                "${workspaceFolder}/Drivers/CMSIS/Includelibopencm3/include/libopencm3/stm32/f0",
+                "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include/c++/7.3.1",
+                "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include/c++/7.3.1/arm-none-eabi",
+                "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include/c++/7.3.1/backward",
+                "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/include",
+                "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/include-fixed",
+                "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include"
+            ],
+            "defines": [
+                "TARGET_HW_CHARGE_BOX_CONTROL",
+                "STM32F0"
+            ],
+            "compilerPath": "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb ",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}
