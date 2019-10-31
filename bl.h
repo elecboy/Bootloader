@@ -47,7 +47,8 @@
 enum {
 	NONE,
 	USART,
-	USB
+	USB,
+	I2C
 };
 
 /* board info forwarded from board-specific code to booloader */

@@ -75,7 +75,7 @@ board_init(void)
 	rcc_periph_clock_enable(BOARD_USART_CLOCK);
 #endif
 #ifdef INTERFACE_I2C
-# error I2C GPIO config not handled yet
+
 #endif
 }
 
@@ -105,7 +105,12 @@ board_deinit(void)
 	rcc_periph_clock_disable(BOARD_USART_CLOCK);
 #endif
 #ifdef INTERFACE_I2C
-# error I2C GPIO config not handled yet
+	/* configure usart pins */
+	gpio_mode_setup(BOARD_PORT_I2C, GPIO_MODE_INPUT,
+		      GPIO_PUPD_NONE, BOARD_PIN_SCL | BOARD_PIN_SDA);
+
+	/* disable I2C peripheral clock */
+	rcc_periph_clock_disable(BOARD_I2C_CLOCK);
 #endif
 
 	/* reset the APB2 peripheral clocks */
@@ -130,6 +135,14 @@ clock_init(void)
 	rcc_clock_setup_in_hsi_out_48mhz();
 #else
 	rcc_clock_setup_in_hsi_out_48mhz();
+	rcc_set_hpre(RCC_CFGR_HPRE_DIV2);
+	/* PA8 to AF 0 for MCO */
+	rcc_periph_clock_enable(RCC_GPIOA);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO8);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, GPIO8);
+	gpio_set_af(GPIOA, 0, GPIO8);
+	RCC_CFGR = (RCC_CFGR & ~RCC_CFGR_MCOPRE) | RCC_CFGR_MCOPRE_DIV64;
+	rcc_set_mco(RCC_CFGR_MCO_SYSCLK);
 #endif
 }
 
@@ -302,14 +315,10 @@ main(void)
 	/* do board-specific initialisation */
 	board_init();
 
-#if defined(INTERFACE_USART) || defined (INTERFACE_USB)
+#if defined(INTERFACE_USART) || defined (INTERFACE_USB) || defined (INTERFACE_I2C)
 	/* XXX sniff for a USART connection to decide whether to wait in the bootloader? */
 	//timeout = BOOTLOADER_DELAY;
     timeout = 0;
-#endif
-
-#ifdef INTERFACE_I2C
-# error I2C bootloader detection logic not implemented
 #endif
 
 	/* if the app left a cookie saying we should wait, then wait */
@@ -334,6 +343,7 @@ main(void)
 		/* try to boot immediately */
         clock_init();
         cinit(BOARD_INTERFACE_CONFIG, USART);
+		cinit(BOARD_INTERFACE_CONFIG, I2C);
 		jump_to_app();
 
 		/* if we returned, there is no app; go to the bootloader and stay there */
@@ -344,6 +354,7 @@ main(void)
 
 	/* start the interface */
 	cinit(BOARD_INTERFACE_CONFIG, USART);
+	cinit(BOARD_INTERFACE_CONFIG, I2C);
 
 	while (1) {
 		/* run the bootloader, possibly coming back after the timeout */

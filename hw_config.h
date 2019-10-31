@@ -686,6 +686,7 @@
 # define BOARD_CHARGE_BOX_CONTROL
 # define INTERFACE_USB                	0
 # define INTERFACE_USART                1
+# define INTERFACE_I2C                  1
 # define USBDEVICESTRING                "Charge Box Control"
 # define USBPRODUCTID                   0x0001
 
@@ -707,6 +708,14 @@
 # define BOARD_PIN_TX                   GPIO2
 # define BOARD_PIN_RX                   GPIO3
 # define BOARD_USART_PIN_CLOCK          RCC_GPIOA
+
+# define BOARD_I2C                      I2C1
+# define BOARD_I2C_CLOCK                RCC_I2C1
+
+# define BOARD_PORT_I2C                 GPIOB
+# define BOARD_PIN_SCL                  GPIO6
+# define BOARD_PIN_SDA                  GPIO7
+# define BOARD_I2C_PIN_CLOCK            RCC_GPIOB
 
 # define BOARD_FORCE_BL_PIN             GPIO13
 # define BOARD_FORCE_BL_PORT            GPIOC

@@ -53,6 +53,7 @@
 #include "bl.h"
 #include "cdcacm.h"
 #include "uart.h"
+#include "i2c.h"
 
 // bootloader flash update protocol.
 //
@@ -140,6 +141,13 @@ inline void cinit(void *config, uint8_t interface)
 
 	if (interface == USART) {
 		return uart_cinit(config);
+	}
+
+#endif
+#if INTERFACE_I2C
+
+	if (interface == I2C) {
+		return i2c_cinit(config);
 	}
 
 #endif
