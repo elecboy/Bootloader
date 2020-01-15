@@ -38,6 +38,10 @@ MEMORY
 {
 	rom (rx)  : ORIGIN = 0x08000000, LENGTH = 8K
 	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 8K
+        VTRAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 0xC0  /* First part of RAM is reserved to the vector table */
+        PARAMRAM (xrw)     : ORIGIN = 0x200000C0, LENGTH = 0x10  /* This RAM area for bootloader and app param */
+        ram (xrw)      : ORIGIN = 0x200000D0, LENGTH = 8K - 0xD0
+
 }
 
 /* Enforce emmission of the vector table. */
