@@ -22,6 +22,7 @@
 // address of MCU IDCODE
 #define DBGMCU_IDCODE		0x40015800
 
+volatile uint32_t IAPParam[4] __attribute__((section(".ParamArea")));
 
 #ifdef INTERFACE_USART
 # define BOARD_INTERFACE_CONFIG		(void *)BOARD_USART
@@ -212,7 +213,7 @@ uint32_t get_mcu_id(void)
 
 int get_mcu_desc(int max, uint8_t *revstr)
 {
-	const char none[] = "STM32F051C8T6,1";
+	const char none[] = "STM32F030C8T6,1";
 	int i;
 
 	for (i = 0; none[i] && i < max - 1; i++) {
@@ -284,10 +285,10 @@ should_wait(void)
 	rcc_periph_clock_enable(RCC_PWR);
 	pwr_disable_backup_domain_write_protect();
 
-	if (RTC_BKPXR(1) == BL_WAIT_MAGIC) {
+	if (IAPParam[1] == BL_WAIT_MAGIC) {
 		result = true;
 	}
-	RTC_BKPXR(1) = BL_VERSION_CODE;
+	IAPParam[0] = BL_VERSION_CODE;
     pwr_enable_backup_domain_write_protect();
     rcc_periph_clock_disable(RCC_PWR);
 

@@ -109,6 +109,11 @@ SECTIONS
 
         . = ALIGN(4);
         end = .;
+
+        /* RAM space for the vector table */
+        .RAMVectorTable(NOLOAD): {*(.RAMVectorTable)} >VTRAM
+        /* RAM space for IAPParam */
+        .ParamArea(NOLOAD): {*(.ParamArea)} >PARAMRAM
 }
 
 PROVIDE(_stack = 0x20002000);

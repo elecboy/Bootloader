@@ -29,4 +29,4 @@ include rules.mk
 upload: all flash-bootloader
 
 flash-bootloader:
-	$(OPENOCD) -f interface/cmsis-dap.cfg -f target/stm32f0x.cfg -c init -c "reset halt" -c "program $(ELF) reset exit verify" -c shutdown
+	$(OPENOCD) -f interface/cmsis-dap.cfg -f target/stm32f0x.cfg -c init -c "reset halt; stm32f0x unlock 0; stm32f0x mass_erase 0; reset halt" -c "program $(ELF) reset exit verify" -c shutdown
