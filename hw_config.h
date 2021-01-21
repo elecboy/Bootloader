@@ -648,12 +648,12 @@
 
 # define OSC_FREQ                       48
 
-# define BOARD_PIN_LED_ACTIVITY         GPIO11
-# define BOARD_PIN_LED_BOOTLOADER       GPIO12
-# define BOARD_PORT_LEDS                GPIOA
-# define BOARD_CLOCK_LEDS               RCC_GPIOA
-# define BOARD_LED_ON                   gpio_set
-# define BOARD_LED_OFF                  gpio_clear
+# define BOARD_PIN_LED_ACTIVITY         GPIO8
+# define BOARD_PIN_LED_BOOTLOADER       GPIO0
+# define BOARD_PORT_LEDS                GPIOB
+# define BOARD_CLOCK_LEDS               RCC_GPIOB
+# define BOARD_LED_ON                   gpio_clear
+# define BOARD_LED_OFF                  gpio_set
 
 # define BOARD_USART                    USART2
 # define BOARD_USART_CLOCK              RCC_USART2
@@ -664,12 +664,6 @@
 # define BOARD_PIN_TX                   GPIO2
 # define BOARD_PIN_RX                   GPIO3
 # define BOARD_USART_PIN_CLOCK          RCC_GPIOA
-
-//# define BOARD_FORCE_BL_PIN             GPIO0
-//# define BOARD_FORCE_BL_PORT            GPIOA
-//# define BOARD_FORCE_BL_CLOCK           RCC_GPIOA
-//# define BOARD_FORCE_BL_PULL            GPIO_PUPD_NONE
-//# define BOARD_FORCE_BL_VALUE           BOARD_FORCE_BL_PIN
 
 # define BOARD_FLASH_SECTORS            56
 # define BOARD_TYPE                     108
