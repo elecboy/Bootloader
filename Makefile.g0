@@ -14,7 +14,7 @@ SRCS		 = $(COMMON_SRCS) $(addprefix $(ARCH)/,$(ARCH_SRCS)) main_g0.c
 
 FLAGS		+= -mthumb -mcpu=cortex-m0plus\
        -DTARGET_HW_$(TARGET_HW) \
-       -DSTM32F0 \
+       -DSTM32G0 \
 		   -T$(LINKER_FILE) \
 		   -L$(LIBOPENCM3)/lib \
 		   -lopencm3_stm32g0

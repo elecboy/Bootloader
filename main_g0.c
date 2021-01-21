@@ -1,5 +1,5 @@
 /*
- * STM32F0 board support for the bootloader.
+ * STM32G0 board support for the bootloader.
  *
  */
 #include "hw_config.h"
@@ -10,7 +10,6 @@
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/pwr.h>
-#include <libopencm3/stm32/rtc.h>
 #include <libopencm3/cm3/systick.h>
 
 #include "bl.h"
@@ -110,7 +109,7 @@ board_deinit(void)
 #endif
 
 	/* reset the APB2 peripheral clocks */
-	RCC_APB2ENR = 0x00000000; // XXX Magic reset number from STM32F0x reference manual
+	RCC_APBENR2 = 0x00000000; // XXX Magic reset number from STM32F0x reference manual
 }
 
 uint32_t
@@ -130,7 +129,7 @@ clock_init(void)
 #if INTERFACE_USB
 	rcc_clock_setup_in_hsi_out_48mhz();
 #else
-	rcc_clock_setup_in_hsi_out_48mhz();
+	rcc_clock_setup(&rcc_clock_config[RCC_CLOCK_CONFIG_HSI_PLL_64MHZ]);
 #endif
 }
 
@@ -165,7 +164,7 @@ clock_deinit(void)
 	rcc_osc_bypass_disable(RCC_HSE);
 
 	/* Reset the CIR register */
-	RCC_CIR = 0x000000;
+	RCC_CIER = 0x000000;
 }
 
 uint32_t
@@ -189,7 +188,8 @@ flash_func_erase_sector(unsigned sector)
 void
 flash_func_write_word(uint32_t address, uint32_t word)
 {
-	flash_program_word(address + APP_LOAD_ADDRESS, word);
+	//flash_program_word(address + APP_LOAD_ADDRESS, word);
+	flash_program(address + APP_LOAD_ADDRESS, (uint8_t *)(&word), 4);
 }
 
 uint32_t
@@ -213,7 +213,7 @@ uint32_t get_mcu_id(void)
 
 int get_mcu_desc(int max, uint8_t *revstr)
 {
-	const char none[] = "STM32F030C8T6,1";
+	const char none[] = "STM32G031G8U6,1";
 	int i;
 
 	for (i = 0; none[i] && i < max - 1; i++) {
