@@ -1,0 +1,32 @@
+#
+# PX4 bootloader build rules for STM32G0 targets.
+#
+ARCH=stm32
+OPENOCD		?= openocd
+
+JTAGCONFIG ?= interface/olimex-jtag-tiny.cfg
+#JTAGCONFIG ?= interface/jtagkey-tiny.cfg
+
+# 3 seconds / 3000 ms default delay
+PX4_BOOTLOADER_DELAY	?= 3000
+
+SRCS		 = $(COMMON_SRCS) $(addprefix $(ARCH)/,$(ARCH_SRCS)) main_g0.c
+
+FLAGS		+= -mthumb -mcpu=cortex-m0plus\
+       -DTARGET_HW_$(TARGET_HW) \
+       -DSTM32F0 \
+		   -T$(LINKER_FILE) \
+		   -L$(LIBOPENCM3)/lib \
+		   -lopencm3_stm32g0
+
+#
+# General rules for making dependency and object files
+# This is where the compiler is called
+#
+include rules.mk
+
+#upload: all flash flash-bootloader
+upload: all flash-bootloader
+
+flash-bootloader:
+	$(OPENOCD) -f interface/cmsis-dap.cfg -f target/stm32g0x.cfg -c init -c "reset halt; stm32g0x unlock 0; stm32f0x mass_erase 0; reset halt" -c "program $(ELF) reset exit verify" -c shutdown
