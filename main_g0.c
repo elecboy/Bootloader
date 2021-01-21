@@ -43,6 +43,11 @@ static void board_init(void);
 static void
 board_init(void)
 {
+    rcc_periph_clock_enable(RCC_GPIOA);
+	gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT,
+		      GPIO_OTYPE_OD, GPIO4);
+	gpio_clear(GPIOA, GPIO4);
+
 	/* initialise LEDs */
     rcc_periph_clock_enable(BOARD_CLOCK_LEDS);
 
@@ -129,7 +134,7 @@ clock_init(void)
 #if INTERFACE_USB
 	rcc_clock_setup_in_hsi_out_48mhz();
 #else
-	rcc_clock_setup(&rcc_clock_config[RCC_CLOCK_CONFIG_HSI_PLL_64MHZ]);
+	rcc_clock_setup(&rcc_clock_config[RCC_CLOCK_CONFIG_HSI_16MHZ]);
 #endif
 }
 

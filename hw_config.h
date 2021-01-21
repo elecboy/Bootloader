@@ -646,7 +646,7 @@
 # define USBDEVICESTRING                "QCC Case V1"
 # define USBPRODUCTID                   0x0001
 
-# define OSC_FREQ                       48
+# define OSC_FREQ                       16
 
 # define BOARD_PIN_LED_ACTIVITY         GPIO8
 # define BOARD_PIN_LED_BOOTLOADER       GPIO0
