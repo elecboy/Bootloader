@@ -106,7 +106,13 @@ extern uint32_t board_get_devices(void);
 extern void clock_deinit(void);
 extern uint32_t flash_func_sector_size(unsigned sector);
 extern void flash_func_erase_sector(unsigned sector);
+#ifdef STM32G0
+extern void flash_func_write_double_word(uint32_t address, uint64_t word);
+extern uint64_t flash_func_read_double_word(uint32_t address);
+#else
 extern void flash_func_write_word(uint32_t address, uint32_t word);
+#endif
+
 extern uint32_t flash_func_read_word(uint32_t address);
 extern uint32_t flash_func_read_otp(uint32_t address);
 extern uint32_t flash_func_read_sn(uint32_t address);

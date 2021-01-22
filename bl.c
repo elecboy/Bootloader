@@ -492,6 +492,8 @@ bootloader(unsigned timeout)
 
 	uint32_t	address = board_info.fw_size;	/* force erase before upload will work */
 	uint32_t	first_word = 0xffffffff;
+	uint64_t	first_dword = 0xffffffffffffffff;
+
 
 	/* (re)start the timer system */
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
@@ -513,6 +515,7 @@ bootloader(unsigned timeout)
 		static union {
 			uint8_t		c[256];
 			uint32_t	w[64];
+			uint64_t	dw[32];
 		} flash_buffer;
 
 		// Wait for a command byte
@@ -700,6 +703,28 @@ bootloader(unsigned timeout)
 
 #endif
 
+#ifdef STM32G0
+				// save the first word and don't program it until everything else is done
+				first_dword = flash_buffer.dw[0];
+				first_word = flash_buffer.w[0];
+				// replace first word with bits we can overwrite later
+				flash_buffer.w[0] = 0xffffffff;
+			}
+
+			arg /= 8;
+
+			for (int i = 0; i < arg; i++) {
+
+				// program the double word
+				flash_func_write_double_word(address, flash_buffer.dw[i]);
+
+				// do immediate read-back verify
+				if (flash_func_read_double_word(address) != flash_buffer.dw[i]) {
+					goto cmd_fail;
+				}
+
+				address += 8;
+#else
 				// save the first word and don't program it until everything else is done
 				first_word = flash_buffer.w[0];
 				// replace first word with bits we can overwrite later
@@ -711,14 +736,15 @@ bootloader(unsigned timeout)
 			for (int i = 0; i < arg; i++) {
 
 				// program the word
-				flash_func_write_word(address, flash_buffer.w[i]);
+				// flash_func_write_word(address, flash_buffer.w[i]);
 
-				// do immediate read-back verify
-				if (flash_func_read_word(address) != flash_buffer.w[i]) {
-					goto cmd_fail;
-				}
+				// // do immediate read-back verify
+				// if (flash_func_read_word(address) != flash_buffer.w[i]) {
+				// 	goto cmd_fail;
+				// }
 
 				address += 4;
+#endif
 			}
 
 			break;
@@ -887,6 +913,19 @@ bootloader(unsigned timeout)
 				goto cmd_bad;
 			}
 
+#ifdef STM32G0
+			// program the deferred first word
+			if (first_dword != 0xffffffffffffffff) {
+				flash_func_write_double_word(0, first_dword);
+
+				if (flash_func_read_double_word(0) != first_dword) {
+					goto cmd_fail;
+				}
+
+				// revert in case the flash was bad...
+				first_dword = 0xffffffffffffffff;
+				first_word = 0xffffffff;
+#else
 			// program the deferred first word
 			if (first_word != 0xffffffff) {
 				flash_func_write_word(0, first_word);
@@ -897,7 +936,10 @@ bootloader(unsigned timeout)
 
 				// revert in case the flash was bad...
 				first_word = 0xffffffff;
+#endif
 			}
+
+
 
 			// send a sync and wait for it to be collected
 			sync_response();

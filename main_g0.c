@@ -191,16 +191,21 @@ flash_func_erase_sector(unsigned sector)
 }
 
 void
-flash_func_write_word(uint32_t address, uint32_t word)
+flash_func_write_double_word(uint32_t address, uint64_t dword)
 {
-	//flash_program_word(address + APP_LOAD_ADDRESS, word);
-	flash_program(address + APP_LOAD_ADDRESS, (uint8_t *)(&word), 4);
+	flash_program_double_word(address + APP_LOAD_ADDRESS, dword);
 }
 
 uint32_t
 flash_func_read_word(uint32_t address)
 {
 	return *(uint32_t *)(address + APP_LOAD_ADDRESS);
+}
+
+uint64_t
+flash_func_read_double_word(uint32_t address)
+{
+	return *(uint64_t *)(address + APP_LOAD_ADDRESS);
 }
 
 uint32_t
