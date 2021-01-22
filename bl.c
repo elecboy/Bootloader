@@ -711,6 +711,7 @@ bootloader(unsigned timeout)
 				flash_buffer.w[0] = 0xffffffff;
 			}
 
+			int rem = arg % 8;
 			arg /= 8;
 
 			for (int i = 0; i < arg; i++) {
@@ -724,6 +725,19 @@ bootloader(unsigned timeout)
 				}
 
 				address += 8;
+			}
+			if(rem > 0)
+			{
+				flash_buffer.w[arg*2+1]=0xffffffff;
+				// program the double word
+				flash_func_write_double_word(address, flash_buffer.dw[arg]);
+
+				// do immediate read-back verify
+				if (flash_func_read_double_word(address) != flash_buffer.dw[arg]) {
+					goto cmd_fail;
+				}
+
+			}
 #else
 				// save the first word and don't program it until everything else is done
 				first_word = flash_buffer.w[0];
@@ -744,9 +758,9 @@ bootloader(unsigned timeout)
 				// }
 
 				address += 4;
-#endif
-			}
 
+			}
+#endif
 			break;
 
 		// fetch CRC of the entire flash area

@@ -223,7 +223,7 @@ uint32_t get_mcu_id(void)
 
 int get_mcu_desc(int max, uint8_t *revstr)
 {
-	const char none[] = "STM32G031G8U6,1";
+	const char none[] = "STM32G031G8U6";
 	int i;
 
 	for (i = 0; none[i] && i < max - 1; i++) {
