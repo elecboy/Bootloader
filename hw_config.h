@@ -659,15 +659,16 @@
 # define BOARD_USART_CLOCK              RCC_USART2
 //# define USART_STOPBITS_1               USART_CR2_STOP_1_0BIT
 # define USART_SR_RXNE                  USART_ISR_RXNE
+//# define OVERRIDE_USART_BAUDRATE		9600
 
 # define BOARD_PORT_USART               GPIOA
 # define BOARD_PIN_TX                   GPIO2
 # define BOARD_PIN_RX                   GPIO3
 # define BOARD_USART_PIN_CLOCK          RCC_GPIOA
 
-# define BOARD_FLASH_SECTORS            56
+# define BOARD_FLASH_SECTORS            28
 # define BOARD_TYPE                     108
-# define FLASH_SECTOR_SIZE              0x400
+# define FLASH_SECTOR_SIZE              0x800
 
 /****************************************************************************
  * TARGET_HW_CAMERA_DOCK_V2
