@@ -669,7 +669,7 @@
 # define BOARD_FLASH_SECTORS            28
 # define BOARD_TYPE                     108
 # define FLASH_SECTOR_SIZE              0x800
-
+# define APP_START_PAGE					(0x08002000-0x08000000)/FLASH_SECTOR_SIZE
 /****************************************************************************
  * TARGET_HW_CAMERA_DOCK_V2
  ****************************************************************************/

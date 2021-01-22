@@ -186,7 +186,7 @@ void
 flash_func_erase_sector(unsigned sector)
 {
 	if (sector < BOARD_FLASH_SECTORS) {
-		flash_erase_page(APP_LOAD_ADDRESS + (sector * FLASH_SECTOR_SIZE));
+		flash_erase_page(APP_START_PAGE+sector);
 	}
 }
 
