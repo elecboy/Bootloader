@@ -16,7 +16,7 @@
 
 #include "bl_version.h"
 
-#define UDID_START      0x1FFFF7AC
+#define UDID_START      0x1FFF7590UL
 
 // address of MCU IDCODE
 #define DBGMCU_IDCODE		0x40015800
@@ -32,7 +32,7 @@ volatile uint32_t IAPParam[4] __attribute__((section(".ParamArea")));
 /* board definition */
 struct boardinfo board_info = {
 	.board_type	= BOARD_TYPE,
-	.board_rev	= 0,
+	.board_rev	= 1,
 	.fw_size	= APP_SIZE_MAX,
 
 	.systick_mhz	= OSC_FREQ,
