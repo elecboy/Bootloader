@@ -258,9 +258,15 @@ jump_to_app()
 	 * We refuse to program the first word of the app until the upload is marked
 	 * complete by the host.  So if it's not 0xffffffff, we should try booting it.
 	 */
+#ifdef STM32G0
+	if (app_base[2] == 0xffffffff) {
+		return;
+	}
+#else
 	if (app_base[0] == 0xffffffff) {
 		return;
 	}
+#endif
 
 	/*
 	 * The second word of the app is the entrypoint; it must point within the
@@ -491,10 +497,12 @@ bootloader(unsigned timeout)
 	bl_type = NONE; // The type of the bootloader, whether loading from USB or USART, will be determined by on what port the bootloader recevies its first valid command.
 
 	uint32_t	address = board_info.fw_size;	/* force erase before upload will work */
+#ifdef STM32G0
+	uint32_t	third_word = 0xffffffff;
+	uint64_t	second_dword = 0xffffffffffffffff;
+#else
 	uint32_t	first_word = 0xffffffff;
-	uint32_t	second_word = 0xffffffff;
-	uint64_t	first_dword = 0xffffffffffffffff;
-
+#endif
 
 	/* (re)start the timer system */
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
@@ -705,13 +713,11 @@ bootloader(unsigned timeout)
 #endif
 
 #ifdef STM32G0
-				// save the first word and don't program it until everything else is done
-				first_dword = flash_buffer.dw[0];
-				first_word = flash_buffer.w[0];
-				second_word = flash_buffer.w[1];
-				// replace first word with bits we can overwrite later
-				flash_buffer.w[0] = 0xffffffff;
-				flash_buffer.w[1] = 0xffffffff;
+				// save the second dword and don't program it until everything else is done
+				second_dword = flash_buffer.dw[1];
+				third_word = flash_buffer.w[2];
+				// replace third word with bits we can overwrite later
+				flash_buffer.w[2] = 0xffffffff;
 			}
 
 			int rem = arg % 8;
@@ -783,16 +789,21 @@ bootloader(unsigned timeout)
 
 			for (unsigned p = 0; p < board_info.fw_size; p += 4) {
 				uint32_t bytes;
-
-				if ((p == 0) && (first_word != 0xffffffff)) {
-					bytes = first_word;
-
-				} else if ((p == 4) && (second_word != 0xffffffff)) {
-					bytes = second_word;
+#ifdef STM32G0
+				if ((p == 8) && (third_word != 0xffffffff)) {
+					bytes = third_word;
 
 				} else {
 					bytes = flash_func_read_word(p);
 				}
+#else
+				if ((p == 0) && (first_word != 0xffffffff)) {
+					bytes = first_word;
+
+				} else {
+					bytes = flash_func_read_word(p);
+				}
+#endif
 
 				sum = crc32((uint8_t *)&bytes, sizeof(bytes), sum);
 			}
@@ -935,22 +946,17 @@ bootloader(unsigned timeout)
 
 #ifdef STM32G0
 			// program the deferred first word
-			flash_func_write_double_word(0x8000, first_dword);
-			flash_func_write_double_word(0x8000, 0x0);
-			flash_func_write_double_word(0x8008, 0x0);
-
-			if (first_dword != 0xffffffffffffffff) 
+			if (second_dword != 0xffffffffffffffff) 
 			{
-				flash_func_write_double_word(0, first_dword);
+				flash_func_write_double_word(8, second_dword);
 
-				if (flash_func_read_double_word(0) != first_dword) {
+				if (flash_func_read_double_word(8) != second_dword) {
 					goto cmd_fail;
 				}
 
 				// revert in case the flash was bad...
-				first_dword = 0xffffffffffffffff;
-				first_word = 0xffffffff;
-				second_word = 0xffffffff;
+				second_dword = 0xffffffffffffffff;
+				third_word = 0xffffffff;
 			}
 #else
 			// program the deferred first word
