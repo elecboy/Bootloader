@@ -258,15 +258,9 @@ jump_to_app()
 	 * We refuse to program the first word of the app until the upload is marked
 	 * complete by the host.  So if it's not 0xffffffff, we should try booting it.
 	 */
-#ifdef STM32G0
-	if (app_base[2] == 0xffffffff) {
-		return;
-	}
-#else
 	if (app_base[0] == 0xffffffff) {
 		return;
 	}
-#endif
 
 	/*
 	 * The second word of the app is the entrypoint; it must point within the
