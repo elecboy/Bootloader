@@ -648,8 +648,8 @@
 
 # define OSC_FREQ                       16
 
-# define BOARD_PIN_LED_ACTIVITY         GPIO8
-# define BOARD_PIN_LED_BOOTLOADER       GPIO0
+# define BOARD_PIN_LED_ACTIVITY         GPIO4
+# define BOARD_PIN_LED_BOOTLOADER       GPIO5
 # define BOARD_PORT_LEDS                GPIOB
 # define BOARD_CLOCK_LEDS               RCC_GPIOB
 # define BOARD_LED_ON                   gpio_clear

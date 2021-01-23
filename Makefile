@@ -30,7 +30,7 @@ export OBJCOPY		 = arm-none-eabi-objcopy
 # Common configuration
 #
 export FLAGS		 = -std=gnu99 \
-			   -Og \
+			   -Os \
 			   -g \
 			   -Wundef \
 			   -Wall \
