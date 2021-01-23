@@ -492,6 +492,7 @@ bootloader(unsigned timeout)
 
 	uint32_t	address = board_info.fw_size;	/* force erase before upload will work */
 	uint32_t	first_word = 0xffffffff;
+	uint32_t	second_word = 0xffffffff;
 	uint64_t	first_dword = 0xffffffffffffffff;
 
 
@@ -707,8 +708,10 @@ bootloader(unsigned timeout)
 				// save the first word and don't program it until everything else is done
 				first_dword = flash_buffer.dw[0];
 				first_word = flash_buffer.w[0];
+				second_word = flash_buffer.w[1];
 				// replace first word with bits we can overwrite later
 				flash_buffer.w[0] = 0xffffffff;
+				flash_buffer.w[1] = 0xffffffff;
 			}
 
 			int rem = arg % 8;
@@ -783,6 +786,9 @@ bootloader(unsigned timeout)
 
 				if ((p == 0) && (first_word != 0xffffffff)) {
 					bytes = first_word;
+
+				} else if ((p == 4) && (second_word != 0xffffffff)) {
+					bytes = second_word;
 
 				} else {
 					bytes = flash_func_read_word(p);
@@ -929,7 +935,12 @@ bootloader(unsigned timeout)
 
 #ifdef STM32G0
 			// program the deferred first word
-			if (first_dword != 0xffffffffffffffff) {
+			flash_func_write_double_word(0x8000, first_dword);
+			flash_func_write_double_word(0x8000, 0x0);
+			flash_func_write_double_word(0x8008, 0x0);
+
+			if (first_dword != 0xffffffffffffffff) 
+			{
 				flash_func_write_double_word(0, first_dword);
 
 				if (flash_func_read_double_word(0) != first_dword) {
@@ -939,6 +950,8 @@ bootloader(unsigned timeout)
 				// revert in case the flash was bad...
 				first_dword = 0xffffffffffffffff;
 				first_word = 0xffffffff;
+				second_word = 0xffffffff;
+			}
 #else
 			// program the deferred first word
 			if (first_word != 0xffffffff) {
@@ -950,10 +963,8 @@ bootloader(unsigned timeout)
 
 				// revert in case the flash was bad...
 				first_word = 0xffffffff;
-#endif
 			}
-
-
+#endif
 
 			// send a sync and wait for it to be collected
 			sync_response();
