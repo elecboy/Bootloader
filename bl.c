@@ -492,6 +492,7 @@ bootloader(unsigned timeout)
 
 	uint32_t	address = board_info.fw_size;	/* force erase before upload will work */
 	uint32_t	first_word = 0xffffffff;
+	uint32_t	second_word = 0xffffffff;
 	uint64_t	first_dword = 0xffffffffffffffff;
 
 
@@ -707,21 +708,23 @@ bootloader(unsigned timeout)
 				// save the first word and don't program it until everything else is done
 				first_dword = flash_buffer.dw[0];
 				first_word = flash_buffer.w[0];
+				second_word = flash_buffer.w[1];
 				// replace first word with bits we can overwrite later
-				flash_buffer.w[0] = 0xffffffff;
+				//flash_buffer.w[0] = 0xffffffff;
 			}
 
 			int rem = arg % 8;
 			arg /= 8;
 
 			for (int i = 0; i < arg; i++) {
+				if(address > 0){
+					// program the double word
+					flash_func_write_double_word(address, flash_buffer.dw[i]);
 
-				// program the double word
-				flash_func_write_double_word(address, flash_buffer.dw[i]);
-
-				// do immediate read-back verify
-				if (flash_func_read_double_word(address) != flash_buffer.dw[i]) {
-					goto cmd_fail;
+					// do immediate read-back verify
+					if (flash_func_read_double_word(address) != flash_buffer.dw[i]) {
+						goto cmd_fail;
+					}
 				}
 
 				address += 8;
@@ -783,6 +786,9 @@ bootloader(unsigned timeout)
 
 				if ((p == 0) && (first_word != 0xffffffff)) {
 					bytes = first_word;
+
+				} else if ((p == 4) && (second_word != 0xffffffff)) {
+					bytes = second_word;
 
 				} else {
 					bytes = flash_func_read_word(p);
