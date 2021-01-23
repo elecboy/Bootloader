@@ -315,8 +315,8 @@ main(void)
 
 #if defined(INTERFACE_USART) || defined (INTERFACE_USB)
 	/* XXX sniff for a USART connection to decide whether to wait in the bootloader? */
-	timeout = BOOTLOADER_DELAY;
-    //timeout = 0;
+	//timeout = BOOTLOADER_DELAY;
+    timeout = 0;
 #endif
 
 #ifdef INTERFACE_I2C

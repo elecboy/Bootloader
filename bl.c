@@ -497,12 +497,9 @@ bootloader(unsigned timeout)
 	bl_type = NONE; // The type of the bootloader, whether loading from USB or USART, will be determined by on what port the bootloader recevies its first valid command.
 
 	uint32_t	address = board_info.fw_size;	/* force erase before upload will work */
-#ifdef STM32G0
-	uint32_t	third_word = 0xffffffff;
-	uint64_t	second_dword = 0xffffffffffffffff;
-#else
 	uint32_t	first_word = 0xffffffff;
-#endif
+	uint64_t	first_dword = 0xffffffffffffffff;
+
 
 	/* (re)start the timer system */
 	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
@@ -713,11 +710,11 @@ bootloader(unsigned timeout)
 #endif
 
 #ifdef STM32G0
-				// save the second dword and don't program it until everything else is done
-				second_dword = flash_buffer.dw[1];
-				third_word = flash_buffer.w[2];
-				// replace third word with bits we can overwrite later
-				flash_buffer.w[2] = 0xffffffff;
+				// save the first word and don't program it until everything else is done
+				first_dword = flash_buffer.dw[0];
+				first_word = flash_buffer.w[0];
+				// replace first word with bits we can overwrite later
+				flash_buffer.w[0] = 0xffffffff;
 			}
 
 			int rem = arg % 8;
@@ -789,21 +786,13 @@ bootloader(unsigned timeout)
 
 			for (unsigned p = 0; p < board_info.fw_size; p += 4) {
 				uint32_t bytes;
-#ifdef STM32G0
-				if ((p == 8) && (third_word != 0xffffffff)) {
-					bytes = third_word;
 
-				} else {
-					bytes = flash_func_read_word(p);
-				}
-#else
 				if ((p == 0) && (first_word != 0xffffffff)) {
 					bytes = first_word;
 
 				} else {
 					bytes = flash_func_read_word(p);
 				}
-#endif
 
 				sum = crc32((uint8_t *)&bytes, sizeof(bytes), sum);
 			}
@@ -946,18 +935,16 @@ bootloader(unsigned timeout)
 
 #ifdef STM32G0
 			// program the deferred first word
-			if (second_dword != 0xffffffffffffffff) 
-			{
-				flash_func_write_double_word(8, second_dword);
+			if (first_dword != 0xffffffffffffffff) {
+				flash_func_write_double_word(0, first_dword);
 
-				if (flash_func_read_double_word(8) != second_dword) {
+				if (flash_func_read_double_word(0) != first_dword) {
 					goto cmd_fail;
 				}
 
 				// revert in case the flash was bad...
-				second_dword = 0xffffffffffffffff;
-				third_word = 0xffffffff;
-			}
+				first_dword = 0xffffffffffffffff;
+				first_word = 0xffffffff;
 #else
 			// program the deferred first word
 			if (first_word != 0xffffffff) {
@@ -969,8 +956,10 @@ bootloader(unsigned timeout)
 
 				// revert in case the flash was bad...
 				first_word = 0xffffffff;
-			}
 #endif
+			}
+
+
 
 			// send a sync and wait for it to be collected
 			sync_response();
